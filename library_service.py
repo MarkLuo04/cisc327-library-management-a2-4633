@@ -351,13 +351,31 @@ def get_patron_status_report(patron_id: str) -> Dict:
     
     borrowing_history = []
     for record in history_records:
+        # Parse dates and format them properly
+        from datetime import datetime
+        borrow_date_str = record['borrow_date']
+        if isinstance(borrow_date_str, str):
+            borrow_date_obj = datetime.fromisoformat(borrow_date_str)
+            borrow_date_formatted = borrow_date_obj.strftime('%Y-%m-%d')
+        else:
+            borrow_date_formatted = borrow_date_str.strftime('%Y-%m-%d') if borrow_date_str else ''
+        
+        return_date_formatted = None
+        if record['return_date']:
+            return_date_str = record['return_date']
+            if isinstance(return_date_str, str):
+                return_date_obj = datetime.fromisoformat(return_date_str)
+                return_date_formatted = return_date_obj.strftime('%Y-%m-%d')
+            else:
+                return_date_formatted = return_date_str.strftime('%Y-%m-%d')
+        
         history_entry = {
             'book_id': record['book_id'],
             'title': record['title'],
             'author': record['author'],
-            'borrow_date': record['borrow_date'],
+            'borrow_date': borrow_date_formatted,
             'due_date': record['due_date'],
-            'return_date': record['return_date'] if record['return_date'] else None,
+            'return_date': return_date_formatted,
             'status': 'Returned' if record['return_date'] else 'Borrowed'
         }
         borrowing_history.append(history_entry)

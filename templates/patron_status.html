@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>👤 Patron Status Report</h2>
+
+<form method="POST">
+    <div class="form-group">
+        <label for="patron_id">Patron ID (6 digits):</label>
+        <input type="text" id="patron_id" name="patron_id" 
+               value="{{ patron_id if patron_id else '' }}" 
+               placeholder="e.g., 123456" 
+               pattern="\d{6}" 
+               maxlength="6" 
+               required>
+    </div>
+    <button type="submit" class="btn">Get Status Report</button>
+</form>
+
+{% if patron_data %}
+<div style="margin-top: 30px;">
+    <h3>Status for Patron: {{ patron_id }}</h3>
+    
+    <div style="margin-bottom: 20px;">
+        <h4>📊 Summary</h4>
+        <p><strong>Total Books Currently Borrowed:</strong> {{ patron_data.books_borrowed_count }}</p>
+        <p><strong>Total Late Fees Owed:</strong> ${{ "%.2f"|format(patron_data.total_late_fees) }}</p>
+        <p><strong>Total Books Borrowed (All Time):</strong> {{ patron_data.borrowing_history|length }}</p>
+    </div>
+    
+    {% if patron_data.currently_borrowed %}
+    <h4>📚 Currently Borrowed Books</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Borrow Date</th>
+                <th>Due Date</th>
+                <th>Late Fee</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for borrow in patron_data.currently_borrowed %}
+            <tr>
+                <td>{{ borrow.book_id }}</td>
+                <td>{{ borrow.title }}</td>
+                <td>{{ borrow.author }}</td>
+                <td>{{ borrow.borrow_date }}</td>
+                <td>{{ borrow.due_date }}</td>
+                <td>${{ "%.2f"|format(borrow.late_fee) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><em>No books currently borrowed.</em></p>
+    {% endif %}
+    
+    {% if patron_data.borrowing_history %}
+    <h4>📖 Borrowing History</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Borrow Date</th>
+                <th>Return Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for history in patron_data.borrowing_history %}
+            <tr>
+                <td>{{ history.book_id }}</td>
+                <td>{{ history.title }}</td>
+                <td>{{ history.author }}</td>
+                <td>{{ history.borrow_date }}</td>
+                <td>{{ history.return_date if history.return_date else 'Currently Borrowed' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

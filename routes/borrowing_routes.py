@@ -3,7 +3,7 @@ Borrowing Routes - Book borrowing and returning endpoints
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from library_service import borrow_book_by_patron, return_book_by_patron
+from library_service import borrow_book_by_patron, return_book_by_patron, get_patron_status_report
 
 borrowing_bp = Blueprint('borrowing', __name__)
 
@@ -49,3 +49,24 @@ def return_book():
     
     flash(message, 'success' if success else 'error')
     return render_template('return_book.html')
+
+@borrowing_bp.route('/patron-status', methods=['GET', 'POST'])
+def patron_status():
+    """
+    Display patron status report.
+    Web interface for R7: Patron Status Report
+    """
+    if request.method == 'GET':
+        return render_template('patron_status.html')
+    
+    patron_id = request.form.get('patron_id', '').strip()
+    
+    # Use business logic function
+    patron_data = get_patron_status_report(patron_id)
+    
+    # Empty dict means invalid patron ID
+    if not patron_data:
+        flash('Invalid Patron ID. Must be exactly 6 digits.', 'error')
+        return render_template('patron_status.html')
+    
+    return render_template('patron_status.html', patron_data=patron_data, patron_id=patron_id)
