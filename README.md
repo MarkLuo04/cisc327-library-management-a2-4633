@@ -1,5 +1,7 @@
 # Library Management System - Flask Web Application with SQLite
 
+[![Library Management Tests](https://github.com/MarkLuo04/cisc327-library-management-a2-4633/actions/workflows/tests.yml/badge.svg)](https://github.com/MarkLuo04/cisc327-library-management-a2-4633/actions/workflows/tests.yml)
+
 ## Overview
 
 This project contains a partial implementation of a Flask-based Library Management System with SQLite database, designed for CISC 327 (Software Quality Assurance) coursework.
