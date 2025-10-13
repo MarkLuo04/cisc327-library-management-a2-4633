@@ -2,6 +2,8 @@
 
 [![Library Management Tests](https://github.com/MarkLuo04/cisc327-library-management-a2-4633/actions/workflows/tests.yml/badge.svg)](https://github.com/MarkLuo04/cisc327-library-management-a2-4633/actions/workflows/tests.yml)
 
+[![codecov](https://codecov.io/github/MarkLuo04/cisc327-library-management-a2-4633/graph/badge.svg?token=51J4ML9428)](https://codecov.io/github/MarkLuo04/cisc327-library-management-a2-4633)
+
 ## Overview
 
 This project contains a partial implementation of a Flask-based Library Management System with SQLite database, designed for CISC 327 (Software Quality Assurance) coursework.
