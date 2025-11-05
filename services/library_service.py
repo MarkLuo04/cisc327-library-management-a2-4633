@@ -10,6 +10,7 @@ from database import (
     insert_book, insert_borrow_record, update_book_availability,
     update_borrow_record_return_date, get_all_books
 )
+from services.payment_service import PaymentGateway
 
 def add_book_to_catalog(title: str, author: str, isbn: str, total_copies: int) -> Tuple[bool, str]:
     """
@@ -311,23 +312,23 @@ def get_patron_status_report(patron_id: str) -> Dict:
         }
     """
     from database import get_db_connection, get_patron_borrowed_books
-    
+
     # Validate patron ID
     if not patron_id or not patron_id.isdigit() or len(patron_id) != 6:
         return {}
-    
+
     # Get currently borrowed books
     currently_borrowed = get_patron_borrowed_books(patron_id)
-    
+
     # Format currently borrowed books with due dates
     borrowed_books_list = []
     total_late_fees = 0.00
-    
+
     for book in currently_borrowed:
         late_fee_info = calculate_late_fee_for_book(patron_id, book['book_id'])
         fee = late_fee_info.get('fee_amount', 0.00)
         total_late_fees += fee
-        
+
         borrowed_books_list.append({
             'book_id': book['book_id'],
             'title': book['title'],
@@ -337,7 +338,7 @@ def get_patron_status_report(patron_id: str) -> Dict:
             'is_overdue': book['is_overdue'],
             'late_fee': fee
         })
-    
+
     # Get borrowing history (all records, including returned books)
     conn = get_db_connection()
     history_records = conn.execute('''
@@ -348,7 +349,7 @@ def get_patron_status_report(patron_id: str) -> Dict:
         ORDER BY br.borrow_date DESC
     ''', (patron_id,)).fetchall()
     conn.close()
-    
+
     borrowing_history = []
     for record in history_records:
         # Parse dates and format them properly
@@ -359,7 +360,7 @@ def get_patron_status_report(patron_id: str) -> Dict:
             borrow_date_formatted = borrow_date_obj.strftime('%Y-%m-%d')
         else:
             borrow_date_formatted = borrow_date_str.strftime('%Y-%m-%d') if borrow_date_str else ''
-        
+
         return_date_formatted = None
         if record['return_date']:
             return_date_str = record['return_date']
@@ -368,7 +369,7 @@ def get_patron_status_report(patron_id: str) -> Dict:
                 return_date_formatted = return_date_obj.strftime('%Y-%m-%d')
             else:
                 return_date_formatted = return_date_str.strftime('%Y-%m-%d')
-        
+
         history_entry = {
             'book_id': record['book_id'],
             'title': record['title'],
@@ -379,10 +380,121 @@ def get_patron_status_report(patron_id: str) -> Dict:
             'status': 'Returned' if record['return_date'] else 'Borrowed'
         }
         borrowing_history.append(history_entry)
-    
+
     return {
         'currently_borrowed': borrowed_books_list,
         'total_late_fees': round(total_late_fees, 2),
         'books_borrowed_count': len(borrowed_books_list),
         'borrowing_history': borrowing_history
     }
+
+
+def pay_late_fees(
+    patron_id: str, book_id: int, payment_gateway: PaymentGateway = None
+) -> Tuple[bool, str, Optional[str]]:
+    """
+    Process payment for late fees using external payment gateway.
+
+    NEW FEATURE FOR ASSIGNMENT 3: Demonstrates need for mocking/stubbing
+    This function depends on an external payment service that should be mocked in tests.
+
+    Args:
+        patron_id: 6-digit library card ID
+        book_id: ID of the book with late fees
+        payment_gateway: Payment gateway instance (injectable for testing)
+
+    Returns:
+        tuple: (success: bool, message: str, transaction_id: Optional[str])
+
+    Example for you to mock:
+        # In tests, mock the payment gateway:
+        mock_gateway = Mock(spec=PaymentGateway)
+        mock_gateway.process_payment.return_value = (True, "txn_123", "Success")
+        success, msg, txn = pay_late_fees("123456", 1, mock_gateway)
+    """
+    # Validate patron ID
+    if not patron_id or not patron_id.isdigit() or len(patron_id) != 6:
+        return False, "Invalid patron ID. Must be exactly 6 digits.", None
+
+    # Calculate late fee first
+    fee_info = calculate_late_fee_for_book(patron_id, book_id)
+
+    # Check if there's a fee to pay
+    if not fee_info or "fee_amount" not in fee_info:
+        return False, "Unable to calculate late fees.", None
+
+    fee_amount = fee_info.get("fee_amount", 0.0)
+
+    if fee_amount <= 0:
+        return False, "No late fees to pay for this book.", None
+
+    # Get book details for payment description
+    book = get_book_by_id(book_id)
+    if not book:
+        return False, "Book not found.", None
+
+    # Use provided gateway or create new one
+    if payment_gateway is None:
+        payment_gateway = PaymentGateway()
+
+    # Process payment through external gateway
+    # THIS IS WHAT YOU SHOULD MOCK IN THEIR TESTS!
+    try:
+        success, transaction_id, message = payment_gateway.process_payment(
+            patron_id=patron_id,
+            amount=fee_amount,
+            description=f"Late fees for '{book['title']}'",
+        )
+
+        if success:
+            return True, f"Payment successful! {message}", transaction_id
+        else:
+            return False, f"Payment failed: {message}", None
+
+    except Exception as e:
+        # Handle payment gateway errors
+        return False, f"Payment processing error: {str(e)}", None
+
+
+def refund_late_fee_payment(
+    transaction_id: str, amount: float, payment_gateway: PaymentGateway = None
+) -> Tuple[bool, str]:
+    """
+    Refund a late fee payment (e.g., if book was returned on time but fees were charged in error).
+
+    NEW FEATURE FOR ASSIGNMENT 3: Another function requiring mocking
+
+    Args:
+        transaction_id: Original transaction ID to refund
+        amount: Amount to refund
+        payment_gateway: Payment gateway instance (injectable for testing)
+
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    # Validate inputs
+    if not transaction_id or not transaction_id.startswith("txn_"):
+        return False, "Invalid transaction ID."
+
+    if amount <= 0:
+        return False, "Refund amount must be greater than 0."
+
+    if amount > 15.00:  # Maximum late fee per book
+        return False, "Refund amount exceeds maximum late fee."
+
+    # Use provided gateway or create new one
+    if payment_gateway is None:
+        payment_gateway = PaymentGateway()
+
+    # Process refund through external gateway
+    # THIS IS WHAT YOU SHOULD MOCK IN YOUR TESTS!
+    try:
+        success, message = payment_gateway.refund_payment(transaction_id, amount)
+
+        if success:
+            return True, message
+        else:
+            return False, f"Refund failed: {message}"
+
+    except Exception as e:
+        return False, f"Refund processing error: {str(e)}"

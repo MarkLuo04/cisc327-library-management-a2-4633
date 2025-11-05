@@ -1,5 +1,5 @@
 import pytest
-from library_service import search_books_in_catalog, add_book_to_catalog
+from services.library_service import search_books_in_catalog, add_book_to_catalog
 
 def test_search_not_implemented():
     """Test that search functionality is not implemented (R6)."""

@@ -1,5 +1,5 @@
 import pytest
-from library_service import get_patron_status_report, add_book_to_catalog, borrow_book_by_patron
+from services.library_service import get_patron_status_report, add_book_to_catalog, borrow_book_by_patron
 
 def test_patron_status_not_implemented():
     """Test that patron status report returns proper structure."""

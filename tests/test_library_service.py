@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
-import library_service as ls
+import services.library_service as ls
 import database  # patch runtime imports from here when needed
 
 
@@ -335,7 +335,7 @@ def test_get_patron_status_with_current_borrow_and_history():
         "get_db_connection",
         return_value=make_mock_conn(fetchall_result=[history_row]),
     ), patch(
-        "library_service.calculate_late_fee_for_book",
+        "services.library_service.calculate_late_fee_for_book",
         return_value={"fee_amount": 0.0, "days_overdue": 0},
     ):
         report = ls.get_patron_status_report("123456")
@@ -372,7 +372,7 @@ def test_get_patron_status_with_late_fee_aggregation():
         "get_db_connection",
         return_value=make_mock_conn(fetchall_result=[history_row]),
     ), patch(
-        "library_service.calculate_late_fee_for_book",
+        "services.library_service.calculate_late_fee_for_book",
         return_value={"fee_amount": 3.00, "days_overdue": 3},
     ):
         report = ls.get_patron_status_report("123456")

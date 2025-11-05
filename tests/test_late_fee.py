@@ -1,5 +1,5 @@
 import pytest
-from library_service import calculate_late_fee_for_book, add_book_to_catalog, borrow_book_by_patron
+from services.library_service import calculate_late_fee_for_book, add_book_to_catalog, borrow_book_by_patron
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -29,7 +29,7 @@ def test_late_fee_books_due_14_days():
     mock_return_date = datetime.now() + timedelta(days=15)
     
     # We need to mock datetime.now() but keep datetime.fromisoformat() working
-    with patch('library_service.datetime') as mock_datetime:
+    with patch('services.library_service.datetime') as mock_datetime:
         mock_datetime.now.return_value = mock_return_date
         mock_datetime.fromisoformat = datetime.fromisoformat
         result = calculate_late_fee_for_book("123456", 1)
@@ -51,7 +51,7 @@ def test_late_fee_50_cents_first_7_days():
     mock_return_date = datetime.now() + timedelta(days=21)
     
     # We need to mock datetime.now() but keep datetime.fromisoformat() working
-    with patch('library_service.datetime') as mock_datetime:
+    with patch('services.library_service.datetime') as mock_datetime:
         mock_datetime.now.return_value = mock_return_date
         mock_datetime.fromisoformat = datetime.fromisoformat
         result = calculate_late_fee_for_book("123456", 1)
@@ -73,7 +73,7 @@ def test_late_fee_1_dollar_after_7_days():
     mock_return_date = datetime.now() + timedelta(days=25)
     
     # We need to mock datetime.now() but keep datetime.fromisoformat() working
-    with patch('library_service.datetime') as mock_datetime:
+    with patch('services.library_service.datetime') as mock_datetime:
         mock_datetime.now.return_value = mock_return_date
         mock_datetime.fromisoformat = datetime.fromisoformat
         result = calculate_late_fee_for_book("123456", 1)
@@ -96,7 +96,7 @@ def test_late_fee_max_15_dollars():
     mock_return_date = datetime.now() + timedelta(days=50)
     
     # We need to mock datetime.now() but keep datetime.fromisoformat() working
-    with patch('library_service.datetime') as mock_datetime:
+    with patch('services.library_service.datetime') as mock_datetime:
         mock_datetime.now.return_value = mock_return_date
         mock_datetime.fromisoformat = datetime.fromisoformat
         result = calculate_late_fee_for_book("123456", 1)
