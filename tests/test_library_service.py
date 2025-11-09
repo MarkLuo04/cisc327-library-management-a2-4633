@@ -24,8 +24,8 @@ def make_mock_conn(fetchone_result=None, fetchall_result=None):
 # ------------------------------
 
 
-@patch("library_service.insert_book")
-@patch("library_service.get_book_by_isbn")
+@patch("services.library_service.insert_book")
+@patch("services.library_service.get_book_by_isbn")
 def test_add_book_success(mock_get_by_isbn, mock_insert):
     mock_get_by_isbn.return_value = None
     mock_insert.return_value = True
@@ -57,7 +57,7 @@ def test_add_book_invalid_isbn_length():
     assert "ISBN must be exactly 13 digits" in msg
 
 
-@patch("library_service.get_book_by_isbn")
+@patch("services.library_service.get_book_by_isbn")
 def test_add_book_duplicate_isbn(mock_get_by_isbn):
     mock_get_by_isbn.return_value = {"isbn": "1234567890123"}
     success, msg = ls.add_book_to_catalog("Title", "Author", "1234567890123", 1)
@@ -70,10 +70,10 @@ def test_add_book_duplicate_isbn(mock_get_by_isbn):
 # ------------------------------
 
 
-@patch("library_service.update_book_availability")
-@patch("library_service.insert_borrow_record")
-@patch("library_service.get_patron_borrow_count")
-@patch("library_service.get_book_by_id")
+@patch("services.library_service.update_book_availability")
+@patch("services.library_service.insert_borrow_record")
+@patch("services.library_service.get_patron_borrow_count")
+@patch("services.library_service.get_book_by_id")
 def test_borrow_book_success(
     mock_get_book, mock_borrow_count, mock_insert_record, mock_update_avail
 ):
@@ -96,14 +96,14 @@ def test_borrow_book_invalid_patron_id_non_digit():
     assert "Invalid patron ID" in msg
 
 
-@patch("library_service.get_book_by_id", return_value=None)
+@patch("services.library_service.get_book_by_id", return_value=None)
 def test_borrow_book_book_not_found(mock_get_book):
     success, msg = ls.borrow_book_by_patron("123456", 9999)
     assert success is False
     assert "Book not found" in msg
 
 
-@patch("library_service.get_book_by_id")
+@patch("services.library_service.get_book_by_id")
 def test_borrow_book_unavailable(mock_get_book):
     mock_get_book.return_value = {"title": "X", "available_copies": 0}
     success, msg = ls.borrow_book_by_patron("123456", 1)
@@ -111,8 +111,8 @@ def test_borrow_book_unavailable(mock_get_book):
     assert "not available" in msg
 
 
-@patch("library_service.get_book_by_id")
-@patch("library_service.get_patron_borrow_count")
+@patch("services.library_service.get_book_by_id")
+@patch("services.library_service.get_patron_borrow_count")
 def test_borrow_book_limit_reached(mock_borrow_count, mock_get_book):
     mock_get_book.return_value = {"title": "X", "available_copies": 1}
     mock_borrow_count.return_value = 5
@@ -126,9 +126,9 @@ def test_borrow_book_limit_reached(mock_borrow_count, mock_get_book):
 # ------------------------------
 
 
-@patch("library_service.update_book_availability", return_value=True)
-@patch("library_service.update_borrow_record_return_date", return_value=True)
-@patch("library_service.get_book_by_id", return_value={"title": "Returned Book"})
+@patch("services.library_service.update_book_availability", return_value=True)
+@patch("services.library_service.update_borrow_record_return_date", return_value=True)
+@patch("services.library_service.get_book_by_id", return_value={"title": "Returned Book"})
 def test_return_book_success(mock_get_book, mock_update_return, mock_update_avail):
     # Use a due date in the future to avoid late fees
     borrow_row = {
@@ -154,7 +154,7 @@ def test_return_book_invalid_patron_id():
     assert "Invalid patron ID" in msg
 
 
-@patch("library_service.get_book_by_id", return_value={"title": "Book Exists"})
+@patch("services.library_service.get_book_by_id", return_value={"title": "Book Exists"})
 def test_return_book_no_active_borrow_record(mock_get_book):
     # Simulate no active borrow record found for this patron/book
     mock_conn = make_mock_conn(fetchone_result=None)
@@ -164,8 +164,8 @@ def test_return_book_no_active_borrow_record(mock_get_book):
     assert "No active borrow record" in msg
 
 
-@patch("library_service.update_borrow_record_return_date", return_value=False)
-@patch("library_service.get_book_by_id", return_value={"title": "Book"})
+@patch("services.library_service.update_borrow_record_return_date", return_value=False)
+@patch("services.library_service.get_book_by_id", return_value={"title": "Book"})
 def test_return_book_update_fail(mock_get_book, mock_update_return):
     borrow_row = {"id": 1}
     mock_conn = make_mock_conn(fetchone_result=borrow_row)

@@ -35,3 +35,11 @@ def test_add_book_positive_copies():
     
     assert success == False
     assert "total copies must be a positive integer" in message.lower()
+
+def test_add_book_author_too_long():
+    """Test that author must be less than 100 characters."""
+    long_author = "A" * 101  # 101 characters
+    success, message = add_book_to_catalog("Test Book", long_author, "1234567890123", 5)
+    
+    assert success == False
+    assert "author must be less than 100 characters" in message.lower()
