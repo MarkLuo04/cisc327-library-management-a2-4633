@@ -68,6 +68,7 @@ def app_url():
     return "http://localhost:5000"
 
 
+@pytest.mark.e2e
 def test_add_book_and_verify_in_catalog(page: Page, flask_server, app_url):
     """
     Add a new book and verify it appears in the catalog.
@@ -110,6 +111,7 @@ def test_add_book_and_verify_in_catalog(page: Page, flask_server, app_url):
     expect(page.locator("table")).to_contain_text(f"{test_copies}/{test_copies} Available")
 
 
+@pytest.mark.e2e
 def test_borrow_book_flow(page: Page, flask_server, app_url):
     """
     Borrow a book from the catalog.
@@ -150,6 +152,7 @@ def test_borrow_book_flow(page: Page, flask_server, app_url):
     expect(page.locator("h2")).to_contain_text("Book Catalog")
 
 
+@pytest.mark.e2e
 def test_navigation_links(page: Page, flask_server, app_url):
     """
     Test navigation between different pages.
