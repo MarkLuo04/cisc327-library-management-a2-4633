@@ -25,9 +25,11 @@ jobs:
     
     - name: Run tests with pytest (excluding E2E tests)
       run: |
-        python -m pytest tests/ -v --tb=short -m "not e2e"
+        python -m pytest tests/ -v --tb=short -m "not e2e" --cov=app --cov=database --cov=services --cov=routes --cov-report=xml --cov-report=term
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        fail_ci_if_error: false
