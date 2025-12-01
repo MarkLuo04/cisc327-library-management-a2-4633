@@ -1,0 +1,9 @@
+# Production requirements for Docker container
+# This excludes testing dependencies to make the image smaller
+
+Flask==2.3.3
+requests==2.31.0
+
+# Note: pytest, playwright, and other testing tools are excluded
+# Use requirements.txt for local development and testing
+

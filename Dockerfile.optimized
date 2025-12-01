@@ -1,0 +1,37 @@
+# OPTIMIZED DOCKERFILE (Optional - Smaller Image Size)
+# This version uses requirements-prod.txt to exclude testing dependencies
+# Use this for production deployment
+
+# Use Python 3.11 slim image as base
+FROM python:3.11-slim
+
+# Set working directory in container
+WORKDIR /app
+
+# Copy requirements file first (for better caching)
+COPY requirements-prod.txt requirements.txt
+
+# Install Python dependencies (production only - smaller image)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only necessary application files
+COPY app.py .
+COPY database.py .
+COPY routes/ routes/
+COPY services/ services/
+COPY templates/ templates/
+
+# Expose port 5000 for Flask application
+EXPOSE 5000
+
+# Set environment variables
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+# Run the Flask application
+CMD ["python", "app.py"]
+
+# Build with: docker build -f Dockerfile.optimized -t library-app-optimized .
+# Run with: docker run -p 5000:5000 library-app-optimized
+
